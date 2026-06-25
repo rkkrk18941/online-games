@@ -452,6 +452,7 @@ let cpuPending=false, cpuTimer=null;
 //  同期: ホスト/参加者のセットアップ
 // ============================================================
 function commit(){ MP.pushState(state); render(); }   // ホスト専用
+function onlineTransport(){ return window.FIREBASE_CONFIG ? "firebase" : "trystero"; }
 
 function bindCommon(){
   MP.onState(s=>{ if(MP.isHost) return; state=s; net.connecting=false; render(); });
@@ -604,6 +605,8 @@ const label=t=>`<div class="label">${t}</div>`;
 // ============================================================
 function renderHome(){
   const fb = !!window.FIREBASE_CONFIG;
+  const onTag = fb ? '<span class="mut" style="font-weight:500;font-size:11px">（安定版・Firebase）</span>'
+                   : '<span class="mut" style="font-weight:500;font-size:11px">（設定不要・P2P）</span>';
   const err = net.error ? `<div class="notice">${esc(net.error)}</div>` : "";
   return `
     <div class="center" style="margin-bottom:18px">
@@ -616,12 +619,12 @@ function renderHome(){
       ${label("あなたの名前")}
       <input class="txt" data-uis="homeName" value="${esc(ui.homeName)}" placeholder="例: たろう" maxlength="12"/>
     </div>
-    <button class="home-card" data-act="m-online" ${fb?"":"disabled"}>
-      <div class="home-t">🌐 オンラインで部屋を作る ${fb?"":'<span class="mut" style="font-weight:500;font-size:11px">（要Firebase設定）</span>'}</div>
+    <button class="home-card" data-act="m-online">
+      <div class="home-t">🌐 オンラインで部屋を作る ${onTag}</div>
       <div class="home-d">部屋コードを発行。友達はそのコードで参加。各自の端末で同時にプレイ。</div>
     </button>
-    <button class="home-card" data-act="m-join" ${fb?"":"disabled"}>
-      <div class="home-t">🔑 部屋に参加する ${fb?"":'<span class="mut" style="font-weight:500;font-size:11px">（要Firebase設定）</span>'}</div>
+    <button class="home-card" data-act="m-join">
+      <div class="home-t">🔑 部屋に参加する ${onTag}</div>
       <div class="home-d">友達からもらった部屋コードを入力して参加。</div>
       <div style="margin-top:8px"><input class="num" data-uis="homeRoom" value="${esc(ui.homeRoom)}" placeholder="ABCD" maxlength="4" style="width:90px;text-transform:uppercase;letter-spacing:.2em"/></div>
     </button>
@@ -735,7 +738,7 @@ function renderLobbyOnline(){
     <span class="backlink" data-act="leave">← 退出</span>
     ${sec("部屋コード", `
       <div class="roomcode">${esc(MP.room||"----")}</div>
-      <div class="hint center">このコードを友達に共有。同じページを開いて「部屋に参加」で入力してもらってください。${MP.transport==="broadcast"?"<br><b>※ローカル同期テスト中（同じPCの別タブのみ）</b>":""}</div>`)}
+      <div class="hint center">このコードを友達に共有。同じページを開いて「部屋に参加」で入力してもらってください。${MP.transport==="broadcast"?"<br><b>※ローカル同期テスト中（同じPCの別タブのみ）</b>":MP.transport==="trystero"?"<br>P2P接続（設定不要）":MP.transport==="firebase"?"<br>Firebase（安定版）":""}</div>`)}
     ${sec("座席", seatRows)}
     ${sec("接続中", peerChips||'<span class="mut">…</span>')}
     ${hostCtrls}`;
@@ -989,8 +992,8 @@ function onClick(e){
 
   // --- ホーム ---
   if(a==="m-offline"){ startOffline(); return; }
-  if(a==="m-online"){ startHost("firebase"); return; }
-  if(a==="m-join"){ startJoin("firebase"); return; }
+  if(a==="m-online"){ startHost(onlineTransport()); return; }
+  if(a==="m-join"){ startJoin(onlineTransport()); return; }
   if(a==="m-localhost"){ startHost("broadcast"); return; }
   if(a==="m-localjoin"){ startJoin("broadcast"); return; }
   if(a==="home"){ goHome(); return; }
