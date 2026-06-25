@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>みんなのゲーム置き場</title>
+<style>
+  :root{ --bg:#10211E; --felt:#143029; --panel:#1A332E; --line:#2C4B44;
+    --text:#EAE6D9; --mut:#8FA89F; --gold:#C8A24B; }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;color:var(--text);padding:32px 14px 60px;
+    background:radial-gradient(120% 90% at 50% 0%, var(--felt), var(--bg)) fixed;
+    font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN',system-ui,sans-serif}
+  .wrap{max-width:620px;margin:0 auto}
+  h1{font-size:28px;font-weight:800;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:28px;line-height:1.7}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:520px){ .grid{grid-template-columns:1fr 1fr} }
+  .card{display:block;text-decoration:none;color:inherit;background:var(--panel);
+    border:1px solid var(--line);border-radius:16px;padding:18px;transition:transform .08s,border-color .2s}
+  .card:hover{transform:translateY(-2px);border-color:var(--gold)}
+  .emoji{font-size:30px;line-height:1}
+  .ct{font-size:17px;font-weight:700;margin:10px 0 4px}
+  .cd{font-size:12.5px;color:var(--mut);line-height:1.6}
+  .badge{display:inline-block;font-size:10.5px;color:var(--gold);border:1px solid var(--gold);
+    border-radius:999px;padding:2px 8px;margin-top:10px}
+  footer{color:var(--mut);font-size:11.5px;margin-top:36px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎲 みんなのゲーム置き場</h1>
+  <div class="sub">友達とオンラインで遊べる手作りゲーム集。気になるものをタップして開始。</div>
+  <div class="grid" id="grid"></div>
+  <footer>
+    新しいゲームを追加するには <code>games/＜名前＞/index.html</code> を置き、下の配列に1行足すだけ。<br>
+    オンライン対戦には Firebase 設定が必要です（README.md 参照）。
+  </footer>
+</div>
+<script>
+  // ★ ゲームを追加したらここに1行足すだけ
+  const GAMES=[
+    { dir:"money-lending", emoji:"💰", title:"マネー・レンディング",
+      desc:"稼ぎ・事業・株・貸し借りで資産を競う2〜4人の経済ゲーム。", online:true },
+  ];
+  document.getElementById("grid").innerHTML = GAMES.map(g=>`
+    <a class="card" href="games/${g.dir}/index.html">
+      <div class="emoji">${g.emoji}</div>
+      <div class="ct">${g.title}</div>
+      <div class="cd">${g.desc}</div>
+      ${g.online?'<span class="badge">オンライン対応</span>':""}
+    </a>`).join("");
+</script>
+</body>
+</html>
