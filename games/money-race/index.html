@@ -40,6 +40,12 @@ button{font-family:inherit;cursor:pointer;}
 .assetShelf{position:relative;display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px;padding:9px;border-radius:10px;background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.10);min-height:56px;max-width:330px;}
 .assetIcon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:23px;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.04));box-shadow:0 6px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.08);animation:assetIn .5s ease both;}
 @keyframes assetIn{0%{opacity:0;transform:translateY(7px) scale(.85)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.buyShelf{margin-top:10px;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.10);max-width:330px;}
+.buyHd{margin-bottom:2px;letter-spacing:.04em;}
+.buyItem{display:flex;align-items:center;gap:8px;font-size:12.5px;animation:assetIn .45s ease both;}
+.buyIco{font-size:18px;width:24px;text-align:center;flex:none;}
+.buyNm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+.buyPr{font-family:'DotGothic16',monospace;font-weight:800;color:var(--amber);flex:none;}
 .unlockBanner{background:linear-gradient(90deg,#3a2200,#5a3a00,#3a2200);border:1px solid #c9962a;border-radius:10px;padding:11px;margin-bottom:10px;text-align:center;font-weight:900;color:#ffd76a;letter-spacing:.04em;animation:pop .5s ease;}@keyframes pop{0%{transform:scale(.92);opacity:0}100%{transform:scale(1);opacity:1}}
 .pct{padding:11px 0;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-family:'DotGothic16',monospace;font-size:14px;font-weight:800;}.pct.on{background:var(--amber);color:#1a1206;border-color:#d9a52e;}.pctGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
 .allInBtn{position:relative;width:100%;margin-top:10px;border:none;border-radius:14px;padding:15px;font-family:'DotGothic16',monospace;font-weight:900;color:#2a0f00;background:linear-gradient(135deg,#ffe08a,#ff7a2c);box-shadow:0 0 0 2px rgba(255,200,69,.45),0 10px 30px rgba(255,120,40,.45);animation:allInPulse 1.05s ease-in-out infinite;letter-spacing:.05em;}
@@ -84,7 +90,7 @@ body.shaking{animation:shk .5s;}@keyframes shk{0%,100%{transform:translate(0,0)}
 const PASSWORD="0702", DEFAULT_START=1000;
 const START_OPTIONS=[100,500,1000,5000,10000,100000];
 const ROUND_OPTS=[10,20,30,50], MAX_ROUNDS=50;
-const STEPS=[0,10,20,30,40,50,60,70,80,90];      // 100はALL INボタンで
+const STEPS=[0,10,20,30,40,50,60,70,80,90,100];
 const PCOL={1:{bg:'#F2F0E8',fg:'#10222E'},2:{bg:'#2D6BD8',fg:'#FFFFFF'},3:{bg:'#D63B2F',fg:'#FFFFFF'},4:{bg:'#2FA05A',fg:'#FFFFFF'}};
 const CPUKEY=['hot','genius','prophet'], LEVELS=['熱血','天才','預言者'];
 const CPU_LV={
@@ -117,6 +123,63 @@ const GREED=[
   'ALL IN は運命だ。'
 ];
 
+/* 実在の「買えるもの」カタログ（2026年6月時点のおおよその実勢/定価。安い順） */
+const CATALOG=[
+  {n:'うまい棒',price:15,e:'🍫'},
+  {n:'缶コーヒー',price:130,e:'☕'},
+  {n:'ガチャ1回',price:400,e:'🎰'},
+  {n:'ラーメン一杯',price:1000,e:'🍜'},
+  {n:'映画チケット',price:2000,e:'🎬'},
+  {n:'焼肉ディナー',price:6000,e:'🍖'},
+  {n:'ディズニー1デー',price:10900,e:'🎢'},
+  {n:'高級腕時計（G-SHOCK）',price:50000,e:'⌚'},
+  {n:'Nintendo Switch 2',price:59980,e:'🎮'},
+  {n:'ブランド財布',price:90000,e:'👛'},
+  {n:'iPhone 17 Pro Max',price:194800,e:'📱'},
+  {n:'原付バイク',price:250000,e:'🛵'},
+  {n:'4K大型テレビ',price:300000,e:'📺'},
+  {n:'ルイ・ヴィトンのバッグ',price:500000,e:'👜'},
+  {n:'軽自動車（新車）',price:1500000,e:'🚗'},
+  {n:'ロレックス サブマリーナ',price:1570000,e:'⌚'},
+  {n:'エルメス バーキン',price:2000000,e:'👜'},
+  {n:'ハーレーダビッドソン',price:2500000,e:'🏍️'},
+  {n:'ロレックス デイトナ',price:3000000,e:'⌚'},
+  {n:'普通車（新車）',price:3500000,e:'🚙'},
+  {n:'ランボルギーニ ウラカン',price:24620000,e:'🏎️'},
+  {n:'フェラーリ',price:40000000,e:'🏎️'},
+  {n:'別荘',price:50000000,e:'🏡'},
+  {n:'ランボルギーニ レヴエルト',price:65430000,e:'🏎️'},
+  {n:'一戸建て豪邸',price:150000000,e:'🏠'},
+  {n:'プライベートジェット（セスナ）',price:220000000,e:'✈️'},
+  {n:'都心タワマン高層階',price:225000000,e:'🏙️'},
+  {n:'小型クルーザー',price:300000000,e:'🛥️'},
+  {n:'スーパーヨット（中型）',price:3000000000,e:'🛥️'},
+  {n:'ガルフストリーム G550',price:5000000000,e:'🛩️'},
+  {n:'商業ビル',price:5000000000,e:'🏢'},
+  {n:'ガルフストリーム G650',price:7600000000,e:'🛩️'},
+  {n:'プライベートアイランド',price:10000000000,e:'🏝️'},
+  {n:'メガヨット',price:10000000000,e:'🛳️'},
+  {n:'ボーイング787',price:40000000000,e:'✈️'},
+  {n:'超高層ビル一棟',price:50000000000,e:'🏢'},
+  {n:'世界最高級メガヨット',price:78000000000,e:'🛳️'},
+  {n:'スタジアム建設',price:100000000000,e:'🏟️'},
+  {n:'プロスポーツチーム買収',price:300000000000,e:'⚽'},
+  {n:'人工島開発',price:500000000000,e:'🏝️'},
+  {n:'宇宙ロケット開発',price:1000000000000,e:'🚀'},
+  {n:'衛星コンステレーション',price:3000000000000,e:'🛰️'},
+  {n:'未来都市開発',price:5000000000000,e:'🌆'},
+  {n:'月面基地',price:10000000000000,e:'🌕'}
+];
+function jpyTrim(x){const r=Math.round(x*10)/10;return Math.abs(r)>=100?String(Math.round(r)):String(r);}
+function jpyShort(n){ if(n>=1e12)return jpyTrim(n/1e12)+'兆'; if(n>=1e8)return jpyTrim(n/1e8)+'億'; if(n>=1e4)return jpyTrim(n/1e4)+'万'; return n.toLocaleString('ja-JP')+'円'; }
+function seededShuffle(a,seed){a=a.slice();let s=(seed||1)>>>0;const rnd=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buyableHTML(money,seed){
+  const aff=CATALOG.filter(it=>it.price<=money).sort((a,b)=>b.price-a.price);
+  if(!aff.length)return '<div class="buyShelf"><div class="buyItem"><span class="buyNm sub">まだ何も買えない…</span></div></div>';
+  const top=aff.slice(0,12);
+  const pick=seededShuffle(top,seed).slice(0,5).sort((a,b)=>b.price-a.price);
+  return '<div class="buyShelf"><div class="buyHd small sub">今これが買える</div>'+pick.map(it=>'<div class="buyItem"><span class="buyIco">'+it.e+'</span><span class="buyNm">'+esc(it.n)+'</span><span class="buyPr">'+jpyShort(it.price)+'</span></div>').join('')+'</div>';
+}
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const yen=n=>(n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('ja-JP')+'円';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -191,7 +254,7 @@ function makeGame(cfg){
   }));
   const s={phase:"decide",mode:cfg.mode,hostId:cfg.hostId,hostName:cfg.hostName,
     winP:cfg.winP,maxRounds:cfg.maxRounds,startMoney:cfg.startMoney,
-    round:1,players,tierItems:rollTierItems()};
+    round:1,players,shopSeed:Math.floor(Math.random()*1e9)};
   beginRound(s); if(allDecided(s)) s.phase="judging"; return s;
 }
 function beginRound(s){
@@ -311,11 +374,10 @@ function wealthCard(money,peak){
   const idx=tierIndex(money),t=TIERS[idx],next=TIERS[idx+1];
   let prog=100,ptext='最高ランク到達';
   if(next){const span=next.min-t.min;prog=clamp(Math.round((money-t.min)/span*100),2,100);ptext='次の景色まで '+yen(next.min-money);}
-  const items=(state&&state.tierItems&&state.tierItems[idx])||t.pool.slice(0,4);
   const grad='linear-gradient(135deg,'+t.sky[0]+','+t.sky[1]+')';
   const spark=idx>=4?'<span class="wcSpark">✨</span>':'';
   const peakLine=(peak!=null)?'<div class="wcPeak led g">最高到達 '+yen(peak)+'</div>':'';
-  return '<div class="wealthCard" style="background:'+grad+';border-color:'+t.accent+';box-shadow:0 0 '+(20+idx*4)+'px '+t.accent+'40 inset,0 6px 18px rgba(0,0,0,.4);"><span class="wcAsset" style="font-size:'+(44+idx*7)+'px;opacity:.92;">'+t.emoji+'</span>'+spark+'<div class="wcTier" style="color:'+t.accent+';">RANK '+(idx+1)+' ／ '+esc(t.name)+'</div><div class="wcMoney">'+led(yen(money),28,money>0?'':'w')+'</div>'+peakLine+assetShelf(items)+'<div class="wcBar"><div class="wcFill" style="width:'+prog+'%;background:'+t.accent+';box-shadow:0 0 10px '+t.accent+';"></div></div><div class="wcNext small" style="color:'+t.accent+'cc;">'+esc(ptext)+'</div></div>';}
+  return '<div class="wealthCard" style="background:'+grad+';border-color:'+t.accent+';box-shadow:0 0 '+(20+idx*4)+'px '+t.accent+'40 inset,0 6px 18px rgba(0,0,0,.4);"><span class="wcAsset" style="font-size:'+(44+idx*7)+'px;opacity:.92;">'+t.emoji+'</span>'+spark+'<div class="wcTier" style="color:'+t.accent+';">RANK '+(idx+1)+' ／ '+esc(t.name)+'</div><div class="wcMoney">'+led(yen(money),28,money>0?'':'w')+'</div>'+peakLine+buyableHTML(money,(state&&state.shopSeed)||1)+'<div class="wcBar"><div class="wcFill" style="width:'+prog+'%;background:'+t.accent+';box-shadow:0 0 10px '+t.accent+';"></div></div><div class="wcNext small" style="color:'+t.accent+'cc;">'+esc(ptext)+'</div></div>';}
 
 /* ============================================================
    画面：ホーム
@@ -399,15 +461,11 @@ function vDecide(){
   const me=state.players[meIdx]||state.players[0];
   let body;
   if(di!=null){
-    const money=me.wallet,f=ui.pendFrac||0,bet=Math.floor(money*f),tier=tierIndex(money);
+    const money=me.wallet,f=ui.pendFrac||0,bet=Math.floor(money*f);
     let pct='';STEPS.forEach(p=>pct+='<button class="pct '+(Math.round(f*100)===p?'on':'')+'" onclick="G.pick('+(p/100)+')">'+p+'%</button>');
-    const allOn=Math.round(f*100)===100;
-    const fs=18+Math.min(tier,6)*1.5;
-    const allIn='<button class="allInBtn '+(allOn?'on':'')+'" style="font-size:'+fs+'px;" onclick="G.pick(1)">🔥 全額 ALL IN 🔥</button>';
-    const greed='<div class="greedLine" style="color:'+TIERS[tier].accent+';font-size:'+(12+Math.min(tier,6))+'px;">'+esc(GREED[Math.min(tier,GREED.length-1)])+'</div>';
     const seatNote=(net.localControlsAll&&state.players.filter(p=>!p.isCPU&&!p.out).length>1)?'<div class="small sub center" style="margin-bottom:6px;">▶ '+esc(me.name)+' の番（端末を回してください）</div>':'';
-    body=seatNote+'<div class="panel"><b style="font-size:13px;">賭ける割合</b><div class="small sub" style="margin-top:4px;">'+Math.round(state.winP*100)+'%で賭け金ぶん増加・残りで減少。</div><div class="pctGrid" style="margin-top:10px;">'+pct+'</div>'+allIn+greed+'<div class="hype" style="margin-top:12px;margin-bottom:0;"><div class="small sub">今回の賭け金</div><b>'+yen(bet)+'</b><div class="small sub" style="margin-top:4px;">成功 '+yen(money+bet)+' ／ 失敗 '+yen(money-bet)+'</div></div></div>'
-      +'<button class="btn primary" onclick="G.confirm()">'+(bet>0?(allOn?'全額で勝負！':'勝負する'):'賭けずに進む')+'</button>';
+    body=seatNote+'<div class="panel"><b style="font-size:13px;">賭ける割合</b><div class="small sub" style="margin-top:4px;">'+Math.round(state.winP*100)+'%で賭け金ぶん増加・残りで減少。</div><div class="pctGrid" style="margin-top:10px;">'+pct+'</div><div class="hype" style="margin-top:12px;margin-bottom:0;"><div class="small sub">今回の賭け金</div><b>'+yen(bet)+'</b><div class="small sub" style="margin-top:4px;">成功 '+yen(money+bet)+' ／ 失敗 '+yen(money-bet)+'</div></div></div>'
+      +'<button class="btn primary" onclick="G.confirm()">'+(bet>0?'勝負する':'賭けずに進む')+'</button>';
   } else {
     const pend=state.players.filter(p=>!p.isCPU&&!p.out&&!p.decided).map(p=>esc(p.name));
     body='<div class="panel center"><div style="font-size:15px;font-weight:900;">決定しました</div><div class="small sub" style="margin-top:6px;">'+(pend.length?'他のプレイヤーを待っています：'+pend.join('、'):'集計に進みます…')+'</div></div>';
