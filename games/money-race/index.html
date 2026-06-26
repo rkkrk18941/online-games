@@ -176,9 +176,8 @@ function seededShuffle(a,seed){a=a.slice();let s=(seed||1)>>>0;const rnd=()=>{s=
 function buyableHTML(money,seed){
   const aff=CATALOG.filter(it=>it.price<=money).sort((a,b)=>b.price-a.price);
   if(!aff.length)return '<div class="buyShelf"><div class="buyItem"><span class="buyNm sub">まだ何も買えない…</span></div></div>';
-  const top=aff.slice(0,12);
-  const pick=seededShuffle(top,seed).slice(0,5).sort((a,b)=>b.price-a.price);
-  return '<div class="buyShelf"><div class="buyHd small sub">今これが買える</div>'+pick.map(it=>'<div class="buyItem"><span class="buyIco">'+it.e+'</span><span class="buyNm">'+esc(it.n)+'</span><span class="buyPr">'+jpyShort(it.price)+'</span></div>').join('')+'</div>';
+  const it=aff[0]; // 所持金に一番近い(=今いちばん高く買える)1つ
+  return '<div class="buyShelf"><div class="buyHd small sub">今これが買える</div><div class="buyItem"><span class="buyIco">'+it.e+'</span><span class="buyNm">'+esc(it.n)+'</span><span class="buyPr">'+jpyShort(it.price)+'</span></div></div>';
 }
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const yen=n=>(n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('ja-JP')+'円';
@@ -267,19 +266,20 @@ function beginRound(s){
 }
 const allDecided=s=>s.players.every(p=>p.decided);
 function applyResults(s){
+  const win0=Math.random()<s.winP; // 全員共通の判定（公平）
   s.players.forEach(p=>{
     if(p.out){p.res={action:'out',win:null,bet:0,frac:0,before:p.wallet,after:p.wallet,tierUp:false};return;}
     const before=p.wallet, f=p.frac||0, bet=Math.floor(before*f);
     let win=null, after=before;
-    if(bet>0){ win=Math.random()<s.winP; after=win?before+bet:before-bet; if(after<0)after=0; }
+    if(bet>0){ win=win0; after=win?before+bet:before-bet; if(after<0)after=0; }
     p.wallet=after; const tierUp=tierIndex(after)>tierIndex(before);
     if(after>p.peak)p.peak=after; if(after<=0)p.out=true;
     p.res={action:bet>0?'bet':'skip',win:bet>0?win:null,bet,frac:f,before,after,tierUp};
   });
   s.phase="reveal";
 }
-function advance(s){ const aliveAny=s.players.some(p=>!p.out);
-  if(s.round>=s.maxRounds||!aliveAny){ s.phase="end"; return; }
+function advance(s){ const anyOut=s.players.some(p=>p.out);
+  if(s.round>=s.maxRounds||anyOut){ s.phase="end"; return; }
   s.round++; beginRound(s); if(allDecided(s)) s.phase="judging";
 }
 function cpuChallenge(s,seat){
@@ -478,9 +478,9 @@ function vReveal(){
   let unlock='';if(me&&me.res&&me.res.tierUp){const t=TIERS[tierIndex(me.res.after)];unlock='<div class="unlockBanner"><div style="font-size:24px;line-height:1;margin-bottom:5px;">'+t.emoji+'</div>'+esc(t.name)+' に到達！</div>';}
   let hype='';if(me&&me.res){const r=me.res;if(r.action==='skip')hype='<div class="hype"><b>今回は温存。</b></div>';else if(r.win)hype='<div class="hype"><b>増加！</b><div class="small sub" style="margin-top:4px;">'+yen(r.before)+' → '+yen(r.after)+'</div></div>';else hype='<div class="hype"><b style="color:var(--red)">減少…</b><div class="small sub" style="margin-top:4px;">'+yen(r.before)+' → '+yen(r.after)+'</div></div>';}
   let rows='';state.players.forEach(p=>{const r=p.res||{action:'skip',before:p.wallet,after:p.wallet};const cls=r.action==='skip'?'skip':(r.win?'win':'lose');const tag=r.action==='out'?'OUT':(r.action==='skip'?'SKIP':(r.win?'WIN':'LOSE'));const diff=r.after-r.before;rows+='<div class="resRow">'+pbadge(p.id+1,24)+'<div class="nm">'+esc(p.name)+'</div><span class="outc '+cls+'">'+tag+'</span><span class="amt">'+(diff===0?led('±0円',13,'w'):led((diff>0?'+':'')+yen(diff),13,diff>0?'g':'r'))+'</span></div>';});
-  const last=state.round>=state.maxRounds, bust=me&&me.out, aliveAny=state.players.some(p=>!p.out);
+  const last=state.round>=state.maxRounds, anyOut=state.players.some(p=>p.out);
   const canNext=net.localControlsAll||MP.isHost;
-  const label=(last||!aliveAny)?'最終結果へ':'次のラウンドへ';
+  const label=(last||anyOut)?'最終結果へ':'次のラウンドへ';
   const nextBtn=canNext?'<button class="btn primary" onclick="G.next()">'+label+'</button>':'<div class="center sub small" style="padding:8px;">ホストの操作を待っています…</div>';
   return topbar()+unlock+hype+wealthCard(me?me.wallet:0,me?me.peak:0)+'<div class="panel"><b style="font-size:13px;">ラウンド結果</b>'+rows+'</div>'+rankPanel()+nextBtn;
 }
